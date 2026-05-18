@@ -1,7 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { createPageEntries, flattenToc, isInternalEpubLink } from "../src/reader-core.js";
+import {
+  canNavigatePrevious,
+  createPageEntries,
+  flattenToc,
+  getNextNavigationAction,
+  getSelectedFile,
+  isInternalEpubLink,
+} from "../src/reader-core.js";
 
 test("flattenToc flattens nested items while preserving depth", () => {
   const result = flattenToc([
@@ -49,4 +56,22 @@ test("isInternalEpubLink detects internal vs external links", () => {
   assert.equal(isInternalEpubLink("https://example.com"), false);
   assert.equal(isInternalEpubLink("mailto:test@example.com"), false);
   assert.equal(isInternalEpubLink("//cdn.example.com/resource"), false);
+});
+
+test("canNavigatePrevious requires rendition and hidden cover", () => {
+  assert.equal(canNavigatePrevious({}, false), true);
+  assert.equal(canNavigatePrevious(null, false), false);
+  assert.equal(canNavigatePrevious({}, true), false);
+});
+
+test("getNextNavigationAction reflects cover and rendition state", () => {
+  assert.equal(getNextNavigationAction(null, true), "none");
+  assert.equal(getNextNavigationAction({}, true), "open-first-page");
+  assert.equal(getNextNavigationAction({}, false), "next-page");
+});
+
+test("getSelectedFile returns first file or null", () => {
+  assert.equal(getSelectedFile(undefined), null);
+  assert.equal(getSelectedFile([]), null);
+  assert.equal(getSelectedFile(["book.epub", "other.epub"]), "book.epub");
 });

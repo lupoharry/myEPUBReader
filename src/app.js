@@ -1,4 +1,11 @@
-import { createPageEntries, flattenToc, isInternalEpubLink } from "./reader-core.js";
+import {
+  canNavigatePrevious,
+  createPageEntries,
+  flattenToc,
+  getNextNavigationAction,
+  getSelectedFile,
+  isInternalEpubLink,
+} from "./reader-core.js";
 
 const fileInput = document.getElementById("epub-file");
 const statusNode = document.getElementById("status");
@@ -163,13 +170,14 @@ async function loadBook(file) {
     showCover();
     setStatus(`Loaded: ${state.book.packaging.metadata.title ?? file.name}`);
   } catch (error) {
-    console.error(error);
-    setStatus(`Unable to load EPUB: ${error?.message ?? "Unknown error"}`);
+    console.error(`Failed to load EPUB file "${file.name}"`, error);
+    const errorName = error?.name ? `${error.name}: ` : "";
+    setStatus(`Unable to load EPUB "${file.name}": ${errorName}${error?.message ?? "Unknown error"}`);
   }
 }
 
 previousButton.addEventListener("click", () => {
-  if (!state.rendition || state.coverVisible) {
+  if (!canNavigatePrevious(state.rendition, state.coverVisible)) {
     return;
   }
 
@@ -177,20 +185,19 @@ previousButton.addEventListener("click", () => {
 });
 
 nextButton.addEventListener("click", async () => {
-  if (!state.rendition) {
-    return;
-  }
-
-  if (state.coverVisible) {
+  const action = getNextNavigationAction(state.rendition, state.coverVisible);
+  if (action === "open-first-page") {
     showReader();
     await state.rendition.display();
     return;
   }
 
-  state.rendition.next();
+  if (action === "next-page") {
+    state.rendition.next();
+  }
 });
 
 fileInput.addEventListener("change", async (event) => {
-  const [selectedFile] = event.target.files;
+  const selectedFile = getSelectedFile(event.target.files);
   await loadBook(selectedFile);
 });

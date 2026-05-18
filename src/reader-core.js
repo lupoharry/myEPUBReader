@@ -33,3 +33,27 @@ export function isInternalEpubLink(href) {
   const trimmed = href.trim();
   return !/^[a-z][a-z0-9+.-]*:/i.test(trimmed) && !trimmed.startsWith("//");
 }
+
+export function canNavigatePrevious(hasRendition, coverVisible) {
+  return Boolean(hasRendition) && !coverVisible;
+}
+
+export function getNextNavigationAction(hasRendition, coverVisible) {
+  if (!hasRendition) {
+    return "none";
+  }
+
+  if (coverVisible) {
+    return "open-first-page";
+  }
+
+  return "next-page";
+}
+
+export function getSelectedFile(fileList) {
+  if (!fileList?.length) {
+    return null;
+  }
+
+  return fileList[0] ?? null;
+}
