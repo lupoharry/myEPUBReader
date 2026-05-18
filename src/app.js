@@ -151,6 +151,9 @@ async function loadBook(file) {
     }
 
     const buffer = await file.arrayBuffer();
+    if (typeof JSZip === "undefined") {
+      throw new Error("JSZip did not load. Refresh the page and try again.");
+    }
     if (typeof ePub !== "function") {
       throw new Error("EPUB.js did not load. Refresh the page and try again.");
     }

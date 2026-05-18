@@ -32,7 +32,7 @@ The reader behavior in this repo focuses on these EPUB 3 concepts:
 
 - `/index.html`
   - Main standalone page shell and UI containers
-  - Loads EPUB.js from CDN and boots the app module
+  - Loads JSZip and EPUB.js from CDN and boots the app module
 - `/assets/styles.css`
   - Layout and styling for toolbar, sidebar, viewer, and controls
 - `/src/app.js`
@@ -69,7 +69,7 @@ Then open:
 
 ### Install dependencies
 
-No local npm dependencies are required for runtime. The project includes a minimal `package.json` for tests.
+No local npm dependencies are required for runtime. The browser page loads JSZip and EPUB.js from CDN, and the repo includes a minimal `package.json` for tests.
 
 ### Run tests
 
