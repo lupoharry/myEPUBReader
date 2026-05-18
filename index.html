@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>myEPUBReader</title>
+    <link rel="stylesheet" href="./assets/styles.css" />
+  </head>
+  <body>
+    <header class="toolbar">
+      <h1>myEPUBReader</h1>
+      <label class="file-loader">
+        <span>Open EPUB</span>
+        <input id="epub-file" type="file" accept=".epub,application/epub+zip" />
+      </label>
+      <p id="status" class="status">Load an EPUB file to start reading.</p>
+    </header>
+
+    <main class="reader-layout">
+      <aside class="sidebar" aria-label="Book outline and pages">
+        <section>
+          <h2>Chapters</h2>
+          <ul id="toc-list" class="nav-list"></ul>
+        </section>
+        <section>
+          <h2>Pages</h2>
+          <ul id="page-list" class="nav-list"></ul>
+        </section>
+      </aside>
+
+      <section class="viewer" aria-label="Book viewer">
+        <div id="cover-panel" class="cover-panel">
+          <img id="cover-image" alt="Book cover" />
+          <p id="cover-fallback">No cover image declared in this EPUB.</p>
+        </div>
+        <div id="reader-frame" class="reader-frame" role="document"></div>
+        <div class="nav-buttons">
+          <button id="prev-page" type="button" aria-label="Previous page">← Previous</button>
+          <button id="next-page" type="button" aria-label="Next page">Next →</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
