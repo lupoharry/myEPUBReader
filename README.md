@@ -57,7 +57,7 @@ Because this is a browser app with ES modules, serve the folder with any static 
 Example using Python:
 
 ```bash
-cd /home/runner/work/myEPUBReader/myEPUBReader
+cd myEPUBReader
 python -m http.server 8080
 ```
 
@@ -74,7 +74,7 @@ No local npm dependencies are required for runtime. The project includes a minim
 ### Run tests
 
 ```bash
-cd /home/runner/work/myEPUBReader/myEPUBReader
+cd myEPUBReader
 npm test
 ```
 
