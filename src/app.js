@@ -151,6 +151,9 @@ async function loadBook(file) {
     }
 
     const buffer = await file.arrayBuffer();
+    if (typeof ePub !== "function") {
+      throw new Error("EPUB.js did not load. Refresh the page and try again.");
+    }
     // EPUB.js is loaded from CDN in index.html and exposes the global `ePub` factory.
     state.book = ePub(buffer);
     state.rendition = state.book.renderTo("reader-frame", {
@@ -172,7 +175,7 @@ async function loadBook(file) {
     setStatus(`Loaded: ${state.book.packaging.metadata.title ?? file.name}`);
   } catch (error) {
     console.error(`Failed to load EPUB file "${file.name}"`, error);
-    const errorName = error?.name ? `${error.name}: ` : "";
+    const errorName = error?.name && error.name !== "Error" ? `${error.name} ` : "";
     setStatus(`Unable to load EPUB "${file.name}": ${errorName}${error?.message ?? "Unknown error"}`);
   }
 }

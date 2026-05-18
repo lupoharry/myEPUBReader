@@ -1,7 +1,7 @@
 export function flattenToc(items, depth = 0, result = []) {
   for (const item of items ?? []) {
     result.push({
-      label: item.label ?? "Untitled",
+      label: item.label ?? "Unnamed section",
       href: item.href ?? null,
       depth,
     });
