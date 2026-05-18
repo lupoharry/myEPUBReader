@@ -151,6 +151,7 @@ async function loadBook(file) {
     }
 
     const buffer = await file.arrayBuffer();
+    // EPUB.js is loaded from CDN in index.html and exposes the global `ePub` factory.
     state.book = ePub(buffer);
     state.rendition = state.book.renderTo("reader-frame", {
       width: "100%",

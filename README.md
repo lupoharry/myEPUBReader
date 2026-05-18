@@ -12,9 +12,9 @@ This project aligns with the EPUB specification set maintained in [`w3c/epub-spe
 
 The reader behavior in this repo focuses on these EPUB 3 concepts:
 
-- package metadata and cover discovery
-- navigation document parsing for chapter outline
-- spine/resource navigation and in-publication internal linking
+- Package metadata and cover discovery
+- Navigation document parsing for chapter outline
+- Spine/resource navigation and in-publication internal linking
 
 ## Features
 
