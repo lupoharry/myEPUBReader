@@ -24,6 +24,15 @@ const state = {
   coverVisible: true,
 };
 
+async function tryLoadImage(url) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(true);
+    image.onerror = () => reject(new Error("Cover image failed to load."));
+    image.src = url;
+  });
+}
+
 function setStatus(message) {
   statusNode.textContent = message;
 }
@@ -50,15 +59,72 @@ async function renderCover(book) {
     if (!coverUrl) {
       coverImage.removeAttribute("src");
       coverFallback.classList.remove("hidden");
-      return;
+      return false;
     }
 
+    await tryLoadImage(coverUrl);
     coverImage.src = coverUrl;
     coverFallback.classList.add("hidden");
+    return true;
   } catch {
     coverImage.removeAttribute("src");
     coverFallback.classList.remove("hidden");
+    return false;
   }
+}
+
+function getDisplayTargets(target) {
+  if (!target || typeof target !== "string") {
+    return [target];
+  }
+
+  const targets = [target];
+
+  try {
+    const decoded = decodeURI(target);
+    if (!targets.includes(decoded)) {
+      targets.push(decoded);
+    }
+  } catch {
+    // Keep the original href when URI decoding fails.
+  }
+
+  if (target.includes("#")) {
+    const [withoutFragment] = target.split("#");
+    if (withoutFragment && !targets.includes(withoutFragment)) {
+      targets.push(withoutFragment);
+    }
+
+    try {
+      const decodedWithoutFragment = decodeURI(withoutFragment);
+      if (decodedWithoutFragment && !targets.includes(decodedWithoutFragment)) {
+        targets.push(decodedWithoutFragment);
+      }
+    } catch {
+      // Keep existing targets when URI decoding fails.
+    }
+  }
+
+  return targets;
+}
+
+async function displayTarget(target, errorContext) {
+  if (!state.rendition) {
+    return false;
+  }
+
+  const targets = getDisplayTargets(target);
+  for (const candidate of targets) {
+    try {
+      await state.rendition.display(candidate);
+      return true;
+    } catch {
+      // Continue with the next candidate target.
+    }
+  }
+
+  setStatus(`Unable to open ${errorContext}.`);
+  return false;
 }
 
 function renderToc(tocItems) {
@@ -80,9 +146,9 @@ function renderToc(tocItems) {
     button.style.paddingLeft = `${chapter.depth * 0.85 + 0.5}rem`;
 
     if (chapter.href) {
-      button.addEventListener("click", () => {
+      button.addEventListener("click", async () => {
         showReader();
-        state.rendition.display(chapter.href);
+        await displayTarget(chapter.href, `chapter "${chapter.label}"`);
       });
     } else {
       button.disabled = true;
@@ -112,13 +178,14 @@ async function renderPages(book) {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = page.label;
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
       const cfi = book.locations.cfiFromLocation(page.index);
       if (!cfi) {
+        setStatus(`Unable to open ${page.label}.`);
         return;
       }
       showReader();
-      state.rendition.display(cfi);
+      await displayTarget(cfi, page.label);
     });
 
     item.appendChild(button);
@@ -127,10 +194,10 @@ async function renderPages(book) {
 }
 
 function setupRenditionHandlers() {
-  state.rendition.on("linkClicked", (href) => {
+  state.rendition.on("linkClicked", async (href) => {
     if (isInternalEpubLink(href)) {
       showReader();
-      state.rendition.display(href);
+      await displayTarget(href, "internal link target");
       return;
     }
 
@@ -148,6 +215,11 @@ async function loadBook(file) {
 
     if (state.book) {
       state.book.destroy();
+    }
+
+    if (state.rendition) {
+      state.rendition.destroy();
+      state.rendition = null;
     }
 
     const buffer = await file.arrayBuffer();
@@ -168,13 +240,20 @@ async function loadBook(file) {
     setupRenditionHandlers();
 
     await state.book.ready;
+    await displayTarget(undefined, "the first page");
 
     const navigation = await state.book.loaded.navigation;
     renderToc(navigation?.toc ?? []);
     await renderPages(state.book);
-    await renderCover(state.book);
+    const hasCoverImage = await renderCover(state.book);
 
-    showCover();
+    if (hasCoverImage) {
+      showCover();
+    } else {
+      // Many EPUB publications use the first spine item as a cover page.
+      showReader();
+    }
+
     setStatus(`Loaded: ${state.book.packaging.metadata.title ?? file.name}`);
   } catch (error) {
     console.error(`Failed to load EPUB file "${file.name}"`, error);
@@ -195,7 +274,7 @@ nextButton.addEventListener("click", async () => {
   const action = getNextNavigationAction(state.rendition, state.coverVisible);
   if (action === "open-first-page") {
     showReader();
-    await state.rendition.display();
+    await displayTarget(undefined, "the first page");
     return;
   }
 
